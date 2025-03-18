@@ -71,13 +71,13 @@ public class MonitorSmsActivity extends AppCompatActivity implements View.OnClic
         sentIntent.putExtra("phone", phoneNumber);
         sentIntent.putExtra("message", message);
         PendingIntent sentPI = PendingIntent.getBroadcast(this, 0,
-                sentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                sentIntent, PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         // 以下指定短信接收事件的详细信息
         Intent deliverIntent = new Intent(DELIVERED_SMS_ACTION);
         deliverIntent.putExtra("phone", phoneNumber);
         deliverIntent.putExtra("message", message);
         PendingIntent deliverPI = PendingIntent.getBroadcast(this, 1,
-                deliverIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                deliverIntent, PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         // 获取默认的短信管理器
         SmsManager smsManager = SmsManager.getDefault();
         // 开始发送短信内容。要确保打开发送短信的完全权限，不是那种还需提示的不完整权限
