@@ -13,6 +13,7 @@ public class MainApplication extends Application {
     private static MainApplication mApp; // 声明一个当前应用的静态实例
     public String wechatName; // 自己的微信昵称
     private Socket mSocket; // 声明一个套接字对象
+    public boolean isHarmony=false; // 是否鸿蒙版
 
     // 利用单例模式获取当前应用的唯一实例
     public static MainApplication getInstance() {

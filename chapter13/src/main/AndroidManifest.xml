@@ -52,6 +52,14 @@
             android:name=".ImageDetailActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppCompatTheme" />
+        <activity
+            android:name=".FriendChat2Activity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppCompatTheme" />
+        <activity
+            android:name=".GroupChat2Activity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppCompatTheme" />
     </application>
 
 </manifest>

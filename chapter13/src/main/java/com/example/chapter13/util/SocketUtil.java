@@ -24,6 +24,16 @@ public class SocketUtil {
         }
     }
 
+    // 把对象数据转换为json串，然后发给Socket服务器
+    public static void emit2(Socket socket, String event, Object obj) {
+        try {
+            JSONObject json = new JSONObject(new Gson().toJson(obj));
+            socket.emit(event, json.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     // 判断Socket能否连通
     public static void checkSocketAvailable(Activity act, String host, int port) {
         new Thread(() -> {

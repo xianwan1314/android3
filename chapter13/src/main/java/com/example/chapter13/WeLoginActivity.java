@@ -20,6 +20,7 @@ public class WeLoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_we_login);
         et_name = findViewById(R.id.et_name);
         findViewById(R.id.btn_login).setOnClickListener(v -> doLogin());
+        findViewById(R.id.btn_harmony_login).setOnClickListener(v -> doHarmonyLogin());
         // 检查能否连上Socket服务器
         SocketUtil.checkSocketAvailable(this, NetConst.CHAT_IP, NetConst.CHAT_PORT);
     }
@@ -31,6 +32,20 @@ public class WeLoginActivity extends AppCompatActivity {
             Toast.makeText(this, "请输入您的微信昵称", Toast.LENGTH_SHORT).show();
             return;
         }
+        MainApplication.getInstance().isHarmony = false;
+        MainApplication.getInstance().wechatName = name;
+        // 打开聊天界面
+        startActivity(new Intent(this, WeChatActivity.class));
+    }
+
+    // 执行登录动作
+    private void doHarmonyLogin() {
+        String name = et_name.getText().toString();
+        if (TextUtils.isEmpty(name)) {
+            Toast.makeText(this, "请输入您的微信昵称", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        MainApplication.getInstance().isHarmony = true;
         MainApplication.getInstance().wechatName = name;
         // 打开聊天界面
         startActivity(new Intent(this, WeChatActivity.class));

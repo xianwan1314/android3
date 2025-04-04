@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 
+import com.example.chapter13.FriendChat2Activity;
 import com.example.chapter13.FriendChatActivity;
 import com.example.chapter13.MainApplication;
 import com.example.chapter13.R;
@@ -107,11 +108,19 @@ public class FriendListFragment extends Fragment implements AdapterView.OnItemCl
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         EntityInfo friend = mFriendList.get(position);
-        // 以下跳到与指定好友聊天的界面
-        Intent intent = new Intent(mContext, FriendChatActivity.class);
-        intent.putExtra("self_name", MainApplication.getInstance().wechatName);
-        intent.putExtra("friend_name", friend.name);
-        startActivity(intent);
+        if (false == MainApplication.getInstance().isHarmony) {
+            // 以下跳到与指定好友聊天的界面
+            Intent intent = new Intent(mContext, FriendChatActivity.class);
+            intent.putExtra("self_name", MainApplication.getInstance().wechatName);
+            intent.putExtra("friend_name", friend.name);
+            startActivity(intent);
+        } else {
+            // 以下跳到与指定好友聊天的界面
+            Intent intent = new Intent(mContext, FriendChat2Activity.class);
+            intent.putExtra("self_name", MainApplication.getInstance().wechatName);
+            intent.putExtra("friend_name", friend.name);
+            startActivity(intent);
+        }
     }
 
 }

@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 
+import com.example.chapter13.GroupChat2Activity;
 import com.example.chapter13.GroupChatActivity;
 import com.example.chapter13.MainApplication;
 import com.example.chapter13.R;
@@ -32,7 +33,8 @@ public class GroupListFragment extends Fragment implements AdapterView.OnItemCli
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // 简单起见固定写几个群组，读者可尝试改造为动态创建群组
-        mGroupList.add(new EntityInfo("Android开发技术交流群", ""));
+        //mGroupList.add(new EntityInfo("Android开发技术交流群", ""));
+        mGroupList.add(new EntityInfo("鸿蒙开发技术交流群", ""));
         mGroupList.add(new EntityInfo("摄影爱好者", ""));
         mGroupList.add(new EntityInfo("人工智能学习讨论群", ""));
     }
@@ -54,11 +56,19 @@ public class GroupListFragment extends Fragment implements AdapterView.OnItemCli
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         EntityInfo group = mGroupList.get(position);
-        // 以下跳到在指定群组聊天的界面
-        Intent intent = new Intent(mContext, GroupChatActivity.class);
-        intent.putExtra("self_name", MainApplication.getInstance().wechatName);
-        intent.putExtra("group_name", group.name);
-        startActivity(intent);
+        if (false == MainApplication.getInstance().isHarmony) {
+            // 以下跳到在指定群组聊天的界面
+            Intent intent = new Intent(mContext, GroupChatActivity.class);
+            intent.putExtra("self_name", MainApplication.getInstance().wechatName);
+            intent.putExtra("group_name", group.name);
+            startActivity(intent);
+        } else {
+            // 以下跳到在指定群组聊天的界面
+            Intent intent = new Intent(mContext, GroupChat2Activity.class);
+            intent.putExtra("self_name", MainApplication.getInstance().wechatName);
+            intent.putExtra("group_name", group.name);
+            startActivity(intent);
+        }
     }
 
 }
