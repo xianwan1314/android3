@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startActivity(new Intent(this, RecognizeDocActivity.class));
             }
         } else if (v.getId() == R.id.btn_face_detect) {
-            if (PermissionUtil.checkPermission(this, new String[] {Manifest.permission.CAMERA}, (int) v.getId() % 65536)) {
+            if (PermissionUtil.checkPermission(this, new String[] {Manifest.permission.CAMERA, Manifest.permission.READ_PHONE_STATE}, (int) v.getId() % 65536)) {
                 startActivity(new Intent(this, FaceDetectActivity.class));
             }
         } else if (v.getId() == R.id.btn_face_verify) {
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (PermissionUtil.checkGrant(grantResults)) { // 用户选择了同意授权
                 startActivity(new Intent(this, HmsScanActivity.class));
             } else {
-                Toast.makeText(this, "需要允许摄像头权限才能扫描二维码噢", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "需要允许摄像头权限和电话状态权限才能扫描二维码噢", Toast.LENGTH_SHORT).show();
             }
         } else if (requestCode == R.id.btn_recognize_text % 65536) {
             if (PermissionUtil.checkGrant(grantResults)) { // 用户选择了同意授权
@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (PermissionUtil.checkGrant(grantResults)) { // 用户选择了同意授权
                 startActivity(new Intent(this, FaceVerifyActivity.class));
             } else {
-                Toast.makeText(this, "需要允许存储卡权限才能比对人脸噢", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "需要允许存储卡权限和电话状态权限才能比对人脸噢", Toast.LENGTH_SHORT).show();
             }
         } else if (requestCode == R.id.btn_livness_detect % 65536) {
             if (PermissionUtil.checkGrant(grantResults)) { // 用户选择了同意授权
