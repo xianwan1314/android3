@@ -22,7 +22,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.chapter13.bean.ImageMessage;
 import com.example.chapter13.bean.ImagePart;
+import com.example.chapter13.bean.JoinInfo;
 import com.example.chapter13.bean.MessageInfo;
+import com.example.chapter13.bean.ReceiveFile;
 import com.example.chapter13.util.BitmapUtil;
 import com.example.chapter13.util.ChatUtil;
 import com.example.chapter13.util.DateUtil;
@@ -34,28 +36,32 @@ import com.google.gson.Gson;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.socket.client.Socket;
 
-public class FriendChatActivity extends AppCompatActivity {
-    private static final String TAG = "FriendChatActivity";
+public class GroupChat2Activity extends AppCompatActivity {
+    private static final String TAG = "GroupChat2Activity";
+    private TextView tv_title; // 声明一个文本视图对象
     private EditText et_input; // 声明一个编辑框对象
     private ScrollView sv_chat; // 声明一个滚动视图对象
     private LinearLayout ll_show; // 声明一个聊天窗口的线性布局对象
     private int dip_margin; // 每条聊天记录的四周空白距离
     private int CHOOSE_CODE = 3; // 只在相册挑选图片的请求码
 
-    private String mSelfName, mFriendName; // 自己名称，好友名称
+    private String mSelfName, mGroupName; // 自己名称，群组名称
     private Socket mSocket; // 声明一个套接字对象
     private String mMinute = "00:00"; // 时间提示
+    private int mCount = 0; // 群成员数量
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_friend_chat);
+        setContentView(R.layout.activity_group_chat);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); // 保持屏幕常亮
         mSelfName = getIntent().getStringExtra("self_name");
-        mFriendName = getIntent().getStringExtra("friend_name");
+        mGroupName = getIntent().getStringExtra("group_name");
         initView(); // 初始化视图
         initSocket(); // 初始化套接字
     }
@@ -63,7 +69,7 @@ public class FriendChatActivity extends AppCompatActivity {
     // 初始化视图
     private void initView() {
         dip_margin = Utils.dip2px(this, 5);
-        TextView tv_title = findViewById(R.id.tv_title);
+        tv_title = findViewById(R.id.tv_title);
         et_input = findViewById(R.id.et_input);
         sv_chat = findViewById(R.id.sv_chat);
         ll_show = findViewById(R.id.ll_show);
@@ -76,29 +82,64 @@ public class FriendChatActivity extends AppCompatActivity {
             startActivityForResult(albumIntent, CHOOSE_CODE); // 打开系统相册
         });
         findViewById(R.id.btn_send).setOnClickListener(v -> sendMessage());
-        tv_title.setText(mFriendName);
+        tv_title.setText(mGroupName);
     }
 
     // 初始化套接字
     private void initSocket() {
         mSocket = MainApplication.getInstance().getSocket();
-        // 等待接收好友消息
-        mSocket.on("receive_friend_message", (args) -> {
-            JSONObject json = (JSONObject) args[0];
-            Log.d(TAG, "receive_friend_message:"+json.toString());
-            MessageInfo message = new Gson().fromJson(json.toString(), MessageInfo.class);
+        // 等待接收群组人数通知
+        mSocket.on("person_count", (args) -> {
+            Log.d(TAG, "person_count:"+args[0]);
+            int pCount = Integer.parseInt((String)args[0]);
+            int count = pCount;
+            if (count > mCount) {
+                mCount = pCount;
+                runOnUiThread(() -> tv_title.setText(String.format("%s(%d)", mGroupName, mCount)));
+            }
+        });
+        // 等待接收成员入群通知
+        mSocket.on("person_in_group", (args) -> {
+            Log.d(TAG, "person_in_group:"+args[0]);
+            runOnUiThread(() -> {
+                if (!mSelfName.equals(args[0])) {
+                    tv_title.setText(String.format("%s(%d)", mGroupName, ++mCount));
+                }
+                appendHintMsg(String.format("%s 加入了群聊", args[0]));
+            });
+        });
+        // 等待接收成员退群通知
+        mSocket.on("person_out_group", (args) -> {
+            runOnUiThread(() -> {
+                tv_title.setText(String.format("%s(%d)", mGroupName, --mCount));
+                appendHintMsg(String.format("%s 退出了群聊", args[0]));
+            });
+        });
+        // 等待接收群消息
+        mSocket.on("receive_group_message", (args) -> {
+            Log.d(TAG, "receive_group_message:"+args[0].toString());
+            MessageInfo message = new Gson().fromJson(args[0].toString(), MessageInfo.class);
             // 往聊天窗口添加文本消息
             runOnUiThread(() -> appendChatMsg(message.from, message.content, false));
         });
-        // 等待接收好友图片
-        mSocket.on("receive_friend_image", (args) -> receiveImage(args));
+        // 等待接收群图片
+        mSocket.on("receive_group_image", (args) -> receiveImage(args));
+        // 下面向Socket服务器发送入群通知
+        JoinInfo joinInfo = new JoinInfo(mSelfName, mGroupName);
+        SocketUtil.emit2(mSocket, "join_group", joinInfo);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mSocket.off("receive_friend_message"); // 取消接收好友消息
-        mSocket.off("receive_friend_image"); // 取消接收好友图片
+        // 下面向Socket服务器发送退群通知
+        JoinInfo joinInfo = new JoinInfo(mSelfName, mGroupName);
+        SocketUtil.emit2(mSocket, "leave_group", joinInfo);
+        mSocket.off("person_count"); // 取消接收群组人数通知
+        mSocket.off("person_in_group"); // 取消接收成员入群通知
+        mSocket.off("person_out_group"); // 取消接收成员退群通知
+        mSocket.off("receive_group_message"); // 取消接收群消息
+        mSocket.off("receive_group_image"); // 取消接收群图片
     }
 
     // 发送聊天消息
@@ -111,16 +152,27 @@ public class FriendChatActivity extends AppCompatActivity {
         et_input.setText("");
         ViewUtil.hideOneInputMethod(this, et_input); // 隐藏软键盘
         appendChatMsg(mSelfName, content, true); // 往聊天窗口添加文本消息
-        // 下面向Socket服务器发送聊天消息
-        MessageInfo message = new MessageInfo(mSelfName, mFriendName, content);
-        SocketUtil.emit(mSocket, "send_friend_message", message);
+        // 下面向Socket服务器发送群消息
+        MessageInfo message = new MessageInfo(mSelfName, mGroupName, content);
+        SocketUtil.emit2(mSocket, "send_group_message", message);
     }
 
     // 往聊天窗口添加聊天消息
     private void appendChatMsg(String name, String content, boolean isSelf) {
         appendNowMinute(); // 往聊天窗口添加当前时间
-        // 把单条消息的线性布局添加到聊天窗口上
+        // 把群聊消息的线性布局添加到聊天窗口上
         ll_show.addView(ChatUtil.getChatView(this, name, content, isSelf));
+        // 延迟100毫秒后启动聊天窗口的滚动任务
+        new Handler(Looper.myLooper()).postDelayed(() -> {
+            sv_chat.fullScroll(ScrollView.FOCUS_DOWN); // 滚动到底部
+        }, 100);
+    }
+
+    // 往聊天窗口添加提示消息
+    private void appendHintMsg(String hint) {
+        appendNowMinute(); // 往聊天窗口添加当前时间
+        // 把提示消息的线性布局添加到聊天窗口上
+        ll_show.addView(ChatUtil.getHintView(this, hint, dip_margin));
         // 延迟100毫秒后启动聊天窗口的滚动任务
         new Handler(Looper.myLooper()).postDelayed(() -> {
             sv_chat.fullScroll(ScrollView.FOCUS_DOWN); // 滚动到底部
@@ -154,7 +206,7 @@ public class FriendChatActivity extends AppCompatActivity {
         }
     }
 
-    private int mBlock = 50*1024; // 每段的数据包大小
+    private int mBlock = 45*1024; // 每段的数据包大小
     // 分段传输图片数据
     private void sendImage(String imageName, String imagePath) {
         Log.d(TAG, "sendImage");
@@ -181,33 +233,33 @@ public class FriendChatActivity extends AppCompatActivity {
             }
             // 往Socket服务器发送本段的图片数据
             ImagePart part = new ImagePart(imageName, encodeData, i, bytes.length);
-            ImageMessage message = new ImageMessage(mSelfName, mFriendName, part);
-            SocketUtil.emit(mSocket, "send_friend_image", message);
+            ImageMessage message = new ImageMessage(mSelfName, mGroupName, part);
+            SocketUtil.emit2(mSocket, "send_group_image", message);
         }
     }
 
-    private String mLastFile; // 上次的文件名
-    private int mReceiveCount; // 接收包的数量
-    private byte[] mReceiveData; // 收到的字节数组
+    private Map<String, ReceiveFile> mFileMap = new HashMap<>();
     // 接收对方传来的图片数据
     private void receiveImage(Object... args) {
-        JSONObject json = (JSONObject) args[0];
-        ImageMessage message = new Gson().fromJson(json.toString(), ImageMessage.class);
+        ImageMessage message = new Gson().fromJson(args[0].toString(), ImageMessage.class);
         ImagePart part = message.getPart();
-        if (!part.getName().equals(mLastFile)) { // 与上次文件名不同，表示开始接收新文件
-            mLastFile = part.getName();
-            mReceiveCount = 0;
-            mReceiveData = new byte[part.getLength()];
+        if (!mFileMap.containsKey(message.getFrom())) {
+            mFileMap.put(message.getFrom(), new ReceiveFile());
         }
-        mReceiveCount++;
+        ReceiveFile file = mFileMap.get(message.getFrom());
+        if (!part.getName().equals(file.lastFile)) { // 与上次文件名不同，表示开始接收新文件
+            file = new ReceiveFile(part.getName(), 0, part.getLength());
+            mFileMap.put(message.getFrom(), file);
+        }
+        file.receiveCount++;
         // 把接收到的图片数据通过BASE64解码为字节数组
         byte[] temp = Base64.decode(part.getData(), Base64.DEFAULT);
-        System.arraycopy(temp, 0, mReceiveData, part.getSeq()*mBlock, temp.length);
+        System.arraycopy(temp, 0, file.receiveData, part.getSeq()*mBlock, temp.length);
         // 所有数据包都接收完毕
-        if (mReceiveCount >= part.getLength()/mBlock+1) {
-            mReceiveCount = 0;
+        if (file.receiveCount >= part.getLength()/mBlock+1) {
+            file.receiveCount = 0;
             // 从字节数组中解码得到位图对象
-            Bitmap bitmap = BitmapFactory.decodeByteArray(mReceiveData, 0, mReceiveData.length);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(file.receiveData, 0, file.receiveData.length);
             String imagePath = String.format("%s/%s.jpg",
                     getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).toString(),
                     DateUtil.getNowDateTime());

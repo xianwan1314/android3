@@ -256,6 +256,7 @@ public class GroupChatActivity extends AppCompatActivity {
         System.arraycopy(temp, 0, file.receiveData, part.getSeq()*mBlock, temp.length);
         // 所有数据包都接收完毕
         if (file.receiveCount >= part.getLength()/mBlock+1) {
+            file.receiveCount = 0;
             // 从字节数组中解码得到位图对象
             Bitmap bitmap = BitmapFactory.decodeByteArray(file.receiveData, 0, file.receiveData.length);
             String imagePath = String.format("%s/%s.jpg",

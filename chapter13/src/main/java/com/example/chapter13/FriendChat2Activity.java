@@ -37,8 +37,8 @@ import java.io.ByteArrayOutputStream;
 
 import io.socket.client.Socket;
 
-public class FriendChatActivity extends AppCompatActivity {
-    private static final String TAG = "FriendChatActivity";
+public class FriendChat2Activity extends AppCompatActivity {
+    private static final String TAG = "FriendChat2Activity";
     private EditText et_input; // 声明一个编辑框对象
     private ScrollView sv_chat; // 声明一个滚动视图对象
     private LinearLayout ll_show; // 声明一个聊天窗口的线性布局对象
@@ -84,9 +84,8 @@ public class FriendChatActivity extends AppCompatActivity {
         mSocket = MainApplication.getInstance().getSocket();
         // 等待接收好友消息
         mSocket.on("receive_friend_message", (args) -> {
-            JSONObject json = (JSONObject) args[0];
-            Log.d(TAG, "receive_friend_message:"+json.toString());
-            MessageInfo message = new Gson().fromJson(json.toString(), MessageInfo.class);
+            Log.d(TAG, "receive_friend_message:"+args[0].toString());
+            MessageInfo message = new Gson().fromJson(args[0].toString(), MessageInfo.class);
             // 往聊天窗口添加文本消息
             runOnUiThread(() -> appendChatMsg(message.from, message.content, false));
         });
@@ -113,7 +112,7 @@ public class FriendChatActivity extends AppCompatActivity {
         appendChatMsg(mSelfName, content, true); // 往聊天窗口添加文本消息
         // 下面向Socket服务器发送聊天消息
         MessageInfo message = new MessageInfo(mSelfName, mFriendName, content);
-        SocketUtil.emit(mSocket, "send_friend_message", message);
+        SocketUtil.emit2(mSocket, "send_friend_message", message);
     }
 
     // 往聊天窗口添加聊天消息
@@ -154,7 +153,7 @@ public class FriendChatActivity extends AppCompatActivity {
         }
     }
 
-    private int mBlock = 50*1024; // 每段的数据包大小
+    private int mBlock = 45*1024; // 每段的数据包大小
     // 分段传输图片数据
     private void sendImage(String imageName, String imagePath) {
         Log.d(TAG, "sendImage");
@@ -182,7 +181,7 @@ public class FriendChatActivity extends AppCompatActivity {
             // 往Socket服务器发送本段的图片数据
             ImagePart part = new ImagePart(imageName, encodeData, i, bytes.length);
             ImageMessage message = new ImageMessage(mSelfName, mFriendName, part);
-            SocketUtil.emit(mSocket, "send_friend_image", message);
+            SocketUtil.emit2(mSocket, "send_friend_image", message);
         }
     }
 
@@ -191,8 +190,7 @@ public class FriendChatActivity extends AppCompatActivity {
     private byte[] mReceiveData; // 收到的字节数组
     // 接收对方传来的图片数据
     private void receiveImage(Object... args) {
-        JSONObject json = (JSONObject) args[0];
-        ImageMessage message = new Gson().fromJson(json.toString(), ImageMessage.class);
+        ImageMessage message = new Gson().fromJson(args[0].toString(), ImageMessage.class);
         ImagePart part = message.getPart();
         if (!part.getName().equals(mLastFile)) { // 与上次文件名不同，表示开始接收新文件
             mLastFile = part.getName();

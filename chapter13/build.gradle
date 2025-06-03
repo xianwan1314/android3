@@ -47,7 +47,7 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.2.0'
     // swiperefreshlayout各版本见 https://mvnrepository.com/artifact/androidx.swiperefreshlayout/swiperefreshlayout
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
-    // socketio库各版本见 https://mvnrepository.com/artifact/io.socket/socket.io-client
+    // socketio库各版本见 https://mvnrepository.com/artifact/com.corundumstudio.socketio/netty-socketio
     implementation 'io.socket:socket.io-client:1.0.1'
 
 }
