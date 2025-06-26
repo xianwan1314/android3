@@ -159,7 +159,7 @@ public class GroupChatActivity extends AppCompatActivity {
     private void appendChatMsg(String name, String content, boolean isSelf) {
         appendNowMinute(); // 往聊天窗口添加当前时间
         // 把群聊消息的线性布局添加到聊天窗口上
-        ll_show.addView(ChatUtil.getChatView(this, name, content, isSelf));
+        ll_show.addView(ChatUtil.getChatView(this, name, content, isSelf, true));
         // 延迟100毫秒后启动聊天窗口的滚动任务
         new Handler(Looper.myLooper()).postDelayed(() -> {
             sv_chat.fullScroll(ScrollView.FOCUS_DOWN); // 滚动到底部
@@ -272,7 +272,7 @@ public class GroupChatActivity extends AppCompatActivity {
     private void appendChatImage(String name, String imagePath, boolean isSelf) {
         appendNowMinute(); // 往聊天窗口添加当前时间
         // 把图片消息的线性布局添加到聊天窗口上
-        ll_show.addView(ChatUtil.getChatImage(this, name, imagePath, isSelf));
+        ll_show.addView(ChatUtil.getChatImage(this, name, imagePath, isSelf, true));
         // 延迟100毫秒后启动聊天窗口的滚动任务
         new Handler(Looper.myLooper()).postDelayed(() -> {
             sv_chat.fullScroll(ScrollView.FOCUS_DOWN); // 滚动到底部

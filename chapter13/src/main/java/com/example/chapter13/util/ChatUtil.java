@@ -40,9 +40,14 @@ public class ChatUtil {
     }
 
     // 获得一个消息内容的视图模板
-    public static View getChatView(Context ctx, String name, String content, boolean isSelf) {
+    public static View getChatView(Context ctx, String name, String content, boolean isSelf, boolean isGroup) {
         int layoutId = isSelf ? R.layout.chat_me : R.layout.chat_other;
         View view = LayoutInflater.from(ctx).inflate(layoutId, null);
+        TextView tv_name = view.findViewById(R.id.tv_name);
+        if (isGroup) {
+            tv_name.setText(name);
+            tv_name.setVisibility(View.VISIBLE);
+        }
         ImageView iv_portrait = view.findViewById(R.id.iv_portrait);
         TextView tv_content = view.findViewById(R.id.tv_content);
         iv_portrait.setImageDrawable(getPortraitByName(ctx, name));
@@ -69,9 +74,14 @@ public class ChatUtil {
     }
 
     // 获得一个消息图片的视图模板
-    public static View getChatImage(Context ctx, String name, String imagePath, boolean isSelf) {
+    public static View getChatImage(Context ctx, String name, String imagePath, boolean isSelf, boolean isGroup) {
         int layoutId = isSelf ? R.layout.chat_me : R.layout.chat_other;
         View view = LayoutInflater.from(ctx).inflate(layoutId, null);
+        TextView tv_name = view.findViewById(R.id.tv_name);
+        if (isGroup) {
+            tv_name.setText(name);
+            tv_name.setVisibility(View.VISIBLE);
+        }
         ImageView iv_portrait = view.findViewById(R.id.iv_portrait);
         view.findViewById(R.id.tv_content).setVisibility(View.GONE);
         ImageView iv_content = view.findViewById(R.id.iv_content);
